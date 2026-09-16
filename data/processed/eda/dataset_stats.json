@@ -1,0 +1,10 @@
+{
+  "rows": 93,
+  "unique_tweets": 93,
+  "unique_authors": 42,
+  "inbound": 49,
+  "outbound": 44,
+  "duplicate_tweet_ids": 0,
+  "missing_text": 0,
+  "missing_dates": 0
+}

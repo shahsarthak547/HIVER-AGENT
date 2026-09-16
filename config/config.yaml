@@ -1,0 +1,14 @@
+project:
+  name: hiver-support-agent
+  random_seed: 42
+
+data:
+  raw_path: data/raw/sample.csv
+  processed_path: data/processed
+
+model:
+  test_size: 0.15
+  validation_size: 0.15
+
+retrieval:
+  top_k: 5

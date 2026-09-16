@@ -1,0 +1,11 @@
+,apple_app_service,apple_id_account,battery_charging,connectivity,device_performance,keyboard_text_input,messaging,photos_media,purchase_payment_order,software_update
+apple_app_service,14,0,1,0,0,0,0,0,0,1
+apple_id_account,0,18,0,0,0,0,0,0,0,2
+battery_charging,0,0,20,0,0,0,0,0,0,0
+connectivity,5,0,0,12,0,0,0,0,0,4
+device_performance,1,0,0,0,19,0,0,0,0,8
+keyboard_text_input,0,0,0,0,0,20,0,0,1,0
+messaging,0,0,0,0,0,0,20,0,0,0
+photos_media,0,0,0,0,0,0,0,20,0,0
+purchase_payment_order,2,0,0,0,0,0,0,0,17,1
+software_update,0,0,0,0,0,0,0,0,0,12

@@ -1,0 +1,11 @@
+{
+  "rows": 2811774,
+  "unique_authors": 702777,
+  "inbound_tweets": 1537843,
+  "outbound_tweets": 1273931,
+  "missing_text": 0,
+  "missing_created_at": 0,
+  "duplicate_tweet_ids_within_chunks": 0,
+  "date_min": "2008-05-08 20:13:59+00:00",
+  "date_max": "2017-12-03 23:14:01+00:00"
+}
