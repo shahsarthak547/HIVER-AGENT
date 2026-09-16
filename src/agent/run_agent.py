@@ -1,91 +1,49 @@
 from pathlib import Path
 
-import faiss
 import joblib
-import pandas as pd
-from sentence_transformers import SentenceTransformer
 
 from src.agent.escalation import decide_escalation
 from src.agent.generate_response import generate_response
 from src.agent.response_validator import validate_response
+from src.retrieval.search import load_retrieval, search
 
 
-INDEX_PATH = Path("models/apple_support.index")
-METADATA_PATH = Path("models/apple_support_metadata.csv")
 MODEL_PATH = Path("models/apple_intent_classifier.joblib")
-
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-TOP_K = 5
 
 
 def load_components():
-    index = faiss.read_index(str(INDEX_PATH))
-    metadata = pd.read_csv(METADATA_PATH)
-
     saved_model = joblib.load(MODEL_PATH)
 
     vectorizer = saved_model["vectorizer"]
     classifier = saved_model["model"]
 
-    embedding_model = SentenceTransformer(
-        EMBEDDING_MODEL
-    )
+    retrieval = load_retrieval()
 
-    return (
-        index,
-        metadata,
-        vectorizer,
-        classifier,
-        embedding_model
-    )
+    return vectorizer, classifier, retrieval
 
 
-def classify_message(
-    message,
-    vectorizer,
-    classifier
-):
+def classify_message(message, vectorizer, classifier):
     features = vectorizer.transform([message])
 
     intent = classifier.predict(features)[0]
     probabilities = classifier.predict_proba(features)[0]
 
-    confidence = float(
-        probabilities.max()
-    )
+    confidence = float(probabilities.max())
 
     return intent, confidence
 
 
-def retrieve_cases(
-    message,
-    index,
-    metadata,
-    embedding_model
-):
-    embedding = embedding_model.encode(
-        [message],
-        normalize_embeddings=True
-    )
-
-    scores, indices = index.search(
-        embedding,
-        TOP_K
-    )
+def retrieve_cases(message, retrieval):
+    results = search(message, retrieval)
 
     cases = []
 
-    for score, index_id in zip(
-        scores[0],
-        indices[0]
-    ):
-        row = metadata.iloc[index_id]
-
+    for _, row in results.iterrows():
         cases.append(
             {
                 "customer_text": row["customer_text"],
                 "support_text": row["support_text"],
-                "similarity": float(score)
+                "similarity": float(row["similarity"])
             }
         )
 
@@ -93,13 +51,7 @@ def retrieve_cases(
 
 
 def main():
-    (
-        index,
-        metadata,
-        vectorizer,
-        classifier,
-        embedding_model
-    ) = load_components()
+    vectorizer, classifier, retrieval = load_components()
 
     message = input(
         "Customer message: "
@@ -113,9 +65,12 @@ def main():
 
     cases = retrieve_cases(
         message,
-        index,
-        metadata,
-        embedding_model
+        retrieval
+    )
+
+    print(
+        f"TOP RETRIEVAL SIMILARITY: "
+        f"{cases[0]['similarity']:.4f}"
     )
 
     escalation = decide_escalation(
@@ -178,13 +133,12 @@ def main():
     print("DECISION REASON:")
     print(escalation["reason"])
 
+    print()
+    print("RESPONSE:")
+
     if result is not None:
-        print()
-        print("RESPONSE:")
         print(result)
     else:
-        print()
-        print("RESPONSE:")
         print(
             "Response generation skipped because "
             "the case requires human review."

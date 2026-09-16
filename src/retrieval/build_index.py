@@ -1,48 +1,46 @@
 from pathlib import Path
-import faiss
-import numpy as np
+
+import joblib
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-INPUT_PATH = Path("data/processed/apple/apple_support_pairs.csv")
-GOLDEN_PATH = Path("data/golden/apple_golden_200_labeled.csv")
-INDEX_PATH = Path("models/apple_support.index")
-METADATA_PATH = Path("models/apple_support_metadata.csv")
-MODEL_NAME = "all-MiniLM-L6-v2"
-BATCH_SIZE = 64
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+INPUT_PATH = Path("data/retrieval_apple_cases.csv")
+OUTPUT_PATH = Path("models/apple_support_retrieval.joblib")
+
+MAX_FEATURES = 30000
+
+
 def main():
-    df = pd.read_csv(INPUT_PATH)
-    golden = pd.read_csv(GOLDEN_PATH)
-    golden_ids = set(golden["customer_tweet_id"].astype(str))
-    df["customer_tweet_id"] = (df["customer_tweet_id"].astype(str))
-    df = df[~df["customer_tweet_id"].isin(golden_ids)].copy()
-    df = df.drop_duplicates(subset=["customer_tweet_id"])
-    df["customer_text"] = (df["customer_text"].fillna("").astype(str))
-    df["support_text"] = (df["support_text"].fillna("").astype(str))
-    model = SentenceTransformer(MODEL_NAME)
-    embeddings = model.encode(df["customer_text"].tolist(),batch_size=BATCH_SIZE,show_progress_bar=True,normalize_embeddings=True)
-    embeddings = np.asarray(embeddings,dtype="float32")
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatIP(dimension)
-    index.add(embeddings)
-    INDEX_PATH.parent.mkdir(parents=True,exist_ok=True)
-    faiss.write_index(index,str(INDEX_PATH))
-    metadata = df[
-        [
-            "customer_tweet_id",
-            "support_tweet_id",
-            "customer_text",
-            "support_text",
-            "customer_created_at",
-            "support_created_at"
-        ]
-    ].copy()
-    metadata.to_csv(METADATA_PATH,index=False)
-    print()
-    print(f"Indexed examples: {len(df):,}")
-    print(f"Embedding dimension: {dimension}")
-    print(f"Index size: {index.ntotal:,}")
-    print()
-    print(f"Index saved to: {INDEX_PATH}")
-    print(f"Metadata saved to: {METADATA_PATH}")
+    cases = pd.read_csv(INPUT_PATH)
+
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1, 2),
+        min_df=2,
+        max_features=MAX_FEATURES,
+        sublinear_tf=True
+    )
+
+    embeddings = vectorizer.fit_transform(
+        cases["customer_text"].fillna("")
+    )
+
+    artifact = {
+        "vectorizer": vectorizer,
+        "embeddings": embeddings,
+        "metadata": cases
+    }
+
+    joblib.dump(
+        artifact,
+        OUTPUT_PATH,
+        compress=3
+    )
+
+    print(f"Indexed examples: {len(cases)}")
+    print(f"Features: {embeddings.shape[1]}")
+    print(f"Saved to: {OUTPUT_PATH}")
+
+
 if __name__ == "__main__":
     main()
