@@ -88,7 +88,8 @@ def main():
             intent=intent,
             retrieved_cases=cases
         )
-
+        print("\nGENERATED RESPONSE BEFORE VALIDATION:")
+        print(result)
         validation = validate_response(
             response=result,
             customer_message=message

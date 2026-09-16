@@ -1,5 +1,5 @@
 import os
-
+import re
 import requests
 from dotenv import load_dotenv
 
@@ -15,7 +15,12 @@ OLLAMA_MODEL = os.getenv(
     "qwen2.5:3b"
 )
 
-
+def sanitize_response(response):
+    response = re.sub(r"@\w+", "", response)
+    response = re.sub(r"https?://\S+|www\.\S+", "", response)
+    response = re.sub(r"\b(iOS|iPhone|iPad)\s+\d+(\.\d+)+\b", "", response, flags=re.IGNORECASE)
+    response = re.sub(r"\s+", " ", response)
+    return response.strip()
 def generate_response(
     customer_message,
     intent,
@@ -85,4 +90,4 @@ Return only the customer-facing response.
 
     data = response.json()
 
-    return data["response"].strip()
+    return sanitize_response(data["response"])

@@ -36,7 +36,7 @@ def decide_escalation(
     retrieved_cases,
     customer_message="",
     min_classifier_confidence=0.80,
-    min_retrieval_similarity=0.70
+    min_retrieval_similarity=0.35
 ) -> dict[str, Any]:
 
     if intent == "other_unclear":
