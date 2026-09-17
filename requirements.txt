@@ -8,4 +8,6 @@ pyyaml
 joblib
 pytest
 requests
-python-dotenv
+python-dotenvfastapi
+uvicorn
+httpx
